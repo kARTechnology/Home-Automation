@@ -1,7 +1,14 @@
 #include <ESP8266WiFi.h>  
+#include "DHT.h"
 #include <IRsend.h> 
 #include <ir_Fujitsu.h>
 IRFujitsuAC fujitsu(12);  // IR led controlled by Pin D1.
+
+
+#define DHTPIN 0     // what digital pin the DHT22 is conected to
+#define DHTTYPE DHT22   // there are multiple kinds of DHT sensors
+
+DHT dht(DHTPIN, DHTTYPE);
 
 const char* ssid     = "Karthik_2.4GHz";
 const char* password = "Karthik@123";  
@@ -107,16 +114,25 @@ void loop() {
   if(millis() - timepassed >50000 && temp==0) 
   {
     timepassed=millis();   
-    getDistance();
-    String body="{\"value\":"+String(distance)+"}";
-    sendData("things.ubidots.com","/api/v1.6/devices/water-tank/distance/values?token=A1E-k6sqcpU3tDjLSUHvmnkrPzrqODzXVD",body); 
-  }
+    sendReadings();
+      }
  getDoorStatus(); 
  delay(50);
  
 
 
  }
+
+ void sendReadings()
+ {
+      float h = dht.readHumidity();
+    // Read temperature as Celsius (the default)
+float t = dht.readTemperature();
+
+   String body ="[{\"variable\": \"5a4e216ec03f97703d1063ae\", \"value\":"+String(t)+"}, {\"variable\": \"5a4e2336c03f9772792ff971\", \"value\":"+String( h) +"}, {\"variable\": \"5a4e2869c03f9777f7f58cf0\", \"value\":"+String( dht.computeHeatIndex(t, h, false)) +"}, {\"variable\": \"596f54dac03f97359544d122\", \"value\":"+String( getDistance())+"}]";
+     sendData("things.ubidots.com","/api/v1.6/collections/values?token=A1E-k6sqcpU3tDjLSUHvmnkrPzrqODzXVD",body); 
+
+  }
 
 
 int getDoorStatus(){
