@@ -4,7 +4,7 @@
 #include <ir_Fujitsu.h>
 IRFujitsuAC fujitsu(12);  // IR led controlled by Pin D1.
 
-
+int lastStatus;
 #define DHTPIN 0     // what digital pin the DHT22 is conected to
 #define DHTTYPE DHT22   // there are multiple kinds of DHT sensors
 
@@ -62,8 +62,8 @@ buzz(50);
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());  
  
+     sendReadings();
  
- fujitsu.begin();
 
 
  }
@@ -109,19 +109,32 @@ void sendData(char* host,char* url, String body)
 }
 
 
+
+
 void loop() {
 
   if(millis() - timepassed >50000 && temp==0) 
   {
     timepassed=millis();   
     sendReadings();
-      }
- getDoorStatus(); 
- delay(50);
+      } 
+sendDoorReading();
+   
+  delay(50);
  
 
 
  }
+
+void sendDoorReading()
+{
+    int t = getDoorStatus(); 
+     if(t!=lastStatus) 
+     {lastStatus=t;
+      String body ="[{\"variable\": \"5a5477b0c03f9740bc30cd42\", \"value\":"+String(lastStatus)+"}]";
+     sendData("things.ubidots.com","/api/v1.6/collections/values?token=A1E-k6sqcpU3tDjLSUHvmnkrPzrqODzXVD",body); 
+     }
+}
 
  void sendReadings()
  {
@@ -137,15 +150,15 @@ float t = dht.readTemperature();
 
 int getDoorStatus(){
 val = analogRead(A0);  
-if(val>=850 ) {buzz(100); stemp="  wire short"; temp=-1;}
+ if(val>=860 ) {buzz(100); stemp="  wire short"; temp=-1;}
 else
-if(val>=650 && val <= 849) {stemp=" closed"; temp= 0;}
+if(val>=650 && val <= 859) {stemp=" closed"; temp= 0;}
 else
 if(val>=450 && val <= 649) {buzz(200); stemp=" open"; temp=1;}
 else
 if(val<=449){ buzz(100); stemp=" wire cut"; temp= -2;}
  
-
+ 
 return temp;
 }
  
