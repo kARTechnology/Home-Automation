@@ -2,7 +2,8 @@ print("mqtt setup start");
 connected=0
 silent=0
 dhtpin=3
-
+if(m~=nil) then
+m:close(); m=nil; end
 m = mqtt.Client("clientid", 30, "A1E-k6sqcpU3tDjLSUHvmnkrPzrqODzXVD", "")
  
 m:on("message", 
@@ -46,8 +47,7 @@ function do_mqtt_connect()
 end
 
 do_mqtt_connect()
-
-
+ 
 timeinterval=15
 
 tmr.alarm(0,timeinterval*1000,1,function()
